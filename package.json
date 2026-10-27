@@ -1,0 +1,13 @@
+{
+  "name": "kestrel-api",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Kestrel background jobs API",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
