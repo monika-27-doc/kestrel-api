@@ -6,7 +6,7 @@ const byIdempotencyKey = new Map();
 
 const newId = () => 'job_' + randomBytes(4).toString('hex');
 
-export async function createJob({ type, queue, payload, runAt }, idempotencyKey) {
+export async function createJob({ type, queue, payload, runAt, retryPolicy }, idempotencyKey) {
   if (idempotencyKey && byIdempotencyKey.has(idempotencyKey)) {
     return jobsById.get(byIdempotencyKey.get(idempotencyKey));
   }
@@ -15,6 +15,7 @@ export async function createJob({ type, queue, payload, runAt }, idempotencyKey)
     type,
     queue,
     payload,
+    retryPolicy: retryPolicy ?? null,
     status: runAt ? 'scheduled' : 'queued',
     attempts: 0,
     runAt: runAt ?? null,
