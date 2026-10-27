@@ -1,19 +1,24 @@
 import { Router } from 'express';
 import { createJob, listJobs, getJob, cancelJob } from '../store.js';
+import { validateRetryPolicy } from '../retries.js';
 
 export const jobs = Router();
 
 const MAX_PAYLOAD_BYTES = 256 * 1024;
 
 jobs.post('/', async (req, res) => {
-  const { type, queue = 'default', payload = {}, runAt } = req.body ?? {};
+  const { type, queue = 'default', payload = {}, runAt, retryPolicy } = req.body ?? {};
   if (typeof type !== 'string' || type.length === 0) {
     return res.status(400).json({ code: 'invalid_request', message: '`type` is required.' });
   }
   if (Buffer.byteLength(JSON.stringify(payload)) > MAX_PAYLOAD_BYTES) {
     return res.status(400).json({ code: 'invalid_request', message: '`payload` must be 256 KB or less.' });
   }
-  const job = await createJob({ type, queue, payload, runAt }, req.get('Idempotency-Key'));
+  const retryError = validateRetryPolicy(retryPolicy);
+  if (retryError) {
+    return res.status(400).json({ code: 'invalid_request', message: retryError });
+  }
+  const job = await createJob({ type, queue, payload, runAt, retryPolicy }, req.get('Idempotency-Key'));
   res.status(201).json(job);
 });
 
